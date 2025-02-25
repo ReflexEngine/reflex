@@ -4,32 +4,25 @@
 #include <stdlib.h>
 #include <sys/utsname.h>
 #include <string.h>
-#include <windows.h>
-#include <VersionHelpers.h>
 #include "logger.h"
 #include "version.h"
 #include "args.h"
 #include "lua.h"
 
 int process_platform(lua_State *L) {
-#if defined(_WIN32) || defined(_WIN64)
-    if (IsWindows10OrGreater()) {
-        return lua_return(L, REFLEX_TYPE_STRING, "Windows 10+");
-    }
-    if (IsWindows8OrGreater()) {
-        return lua_return(L, REFLEX_TYPE_STRING, "Windows 8");
-    }
-    if (IsWindows7OrGreater()) {
-        return lua_return(L, REFLEX_TYPE_STRING, "Windows 7");
-    }
-    return lua_return(L, REFLEX_TYPE_STRING, "Windows");
-#else
-    struct utsname sys_info;
-    if (uname(&sys_info) == 0) {
-        return lua_return(L, REFLEX_TYPE_STRING, sys_info.sysname);
-    }
-    return lua_return(L, REFLEX_TYPE_STRING, "Unknown");
-#endif
+    #if defined(_WIN64)
+        return lua_return(L, REFLEX_TYPE_STRING, "Windows x64");
+    #elif defined(_WIN32)
+        return lua_return(L, REFLEX_TYPE_STRING, "Windows x32");
+    #elif defined(__APPLE__)
+        return lua_return(L, REFLEX_TYPE_STRING, "Apple OS");
+    #elif defined(__unix__)
+        return lua_return(L, REFLEX_TYPE_STRING, "Unix");
+    #elif defined(__linux__)
+        return lua_return(L, REFLEX_TYPE_STRING, "Linux");
+    #else
+        return lua_return(L, REFLEX_TYPE_STRING, "Unknown");
+    #endif
 }
 
 int process_exit(lua_State *L) {
