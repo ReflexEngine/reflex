@@ -40,7 +40,8 @@ jobs:
         shell: msys2 {0}
         run: make
 
-      - name: Archive Build Artifacts
+      - name: Archive Build Artifacts (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p release
           if [[ "$RUNNER_OS" == "Linux" ]]; then
@@ -51,12 +52,11 @@ jobs:
             chmod +x release/reflex-macos
           fi
         shell: bash
-        if: runner.os != 'Windows'
 
       - name: Archive Build Artifacts (Windows)
+        if: runner.os == 'Windows'
         run: copy binout\reflex.exe release\reflex-windows.exe
         shell: cmd
-        if: runner.os == 'Windows'
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -78,33 +78,33 @@ jobs:
       - name: Download Linux Build
         uses: actions/download-artifact@v4
         with:
-          name: reflex-Linux
+          name: reflexengine-linux
           path: release/
 
       - name: Download macOS Build
         uses: actions/download-artifact@v4
         with:
-          name: reflex-macOS
+          name: reflexengine-macos
           path: release/
 
       - name: Download Windows Build
         uses: actions/download-artifact@v4
         with:
-          name: reflex-Windows
+          name: reflexengine-windows
           path: release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: 
-            - release/reflex-linux
-            - release/reflex-macos
-            - release/reflex-windows.exe
-          tag_name: ${{ github.ref_name }}
-          name: ReflexEngine ${{ github.ref_name }}
-          body: |
-            🚀 **New Release:** ReflexEngine ${{ github.ref_name }}
-            - ✅ **Linux**, **macOS**, and **Windows** builds!
-            - 🔥 Automatic build from latest commit.
-          draft: false
-          prerelease: false
+            tag_name: ${{ github.ref_name }}
+            name: ReflexEngine ${{ github.ref_name }}
+            body: |
+              🚀 **New Release:** ReflexEngine ${{ github.ref_name }}
+              - ✅ **Linux**, **macOS**, and **Windows** builds!
+              - 🔥 Automatic build from latest commit.
+            draft: false
+            prerelease: false
+            files: |
+              release/reflex-linux
+              release/reflex-macos
+              release/reflex-windows.exe

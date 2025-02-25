@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# This script checks if the mingw64 directories are available for cross-compilation (if necessary)
+
+# Check if the mingw64 directories are available for Lua 5.4 (headers and libraries)
+if [ ! -d "/mingw64/include/lua5.4" ] || [ ! -d "/mingw64/lib" ]; then
+    echo "Mingw64 Lua 5.4 headers and libraries not found. Make sure mingw64 is properly installed."
+    exit 1
+fi
+
+echo "Mingw64 Lua 5.4 environment is properly set up."
