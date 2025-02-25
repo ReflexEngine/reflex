@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -Wextra -I$(SRC_DIR)/headers -I./include
-LDFLAGS = -L/mingw64/lib -llua
+LDFLAGS = -L/usr/lib -llua
 
 # Directories
 SRC_DIR = src
