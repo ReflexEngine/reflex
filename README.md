@@ -8,6 +8,7 @@ A **lightweight**, **high-performance** Lua runtime designed for speed, efficien
 
 ![Status](https://img.shields.io/badge/status-WIP-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![Build and Release](https://github.com/ReflexEngine/reflex/actions/workflows/release.yml/badge.svg)](https://github.com/ReflexEngine/reflex/actions/workflows/release.yml)
 
 ## 🚀 What is ReflexEngine?  
 

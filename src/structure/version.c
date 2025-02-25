@@ -2,7 +2,7 @@
 #include "lua.h"
 
 const char* getVersion() {
-    return "1.0.0";
+    return "v0.0.1";
 }
 
 const char* getLuaVersion() {
