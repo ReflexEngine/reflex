@@ -1,0 +1,15 @@
+
+# Environment Files
+.env
+
+# Build files
+build
+
+# Binary output files
+binout
+
+# Reflex Dependencies (Testing dependency management with require)
+reflex_deps
+
+# Visual Studio Code Configurations
+.vscode
