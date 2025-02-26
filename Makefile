@@ -42,17 +42,23 @@ DISTRO_macos_CFLAGS = $(BASE_CFLAGS) -I/usr/local/include -I/usr/local/include/l
 DISTRO_macos_LDFLAGS = -L/usr/local/lib -llua
 DISTRO_macos_TARGET = $(BIN_DIR)/$(TARGET_NAME)
 
-# Windows (MinGW)
+# Windows (MSVC)
 DISTRO_windows_CC = gcc
-DISTRO_windows_CFLAGS = $(BASE_CFLAGS) -I/usr/x86_64-w64-mingw32/include -I/usr/x86_64-w64-mingw32/include/lua
-DISTRO_windows_LDFLAGS = -L/usr/x86_64-w64-mingw32/lib -llua
+DISTRO_windows_CFLAGS = $(BASE_CFLAGS) -IC:\Program Files\Lua\include
+DISTRO_windows_LDFLAGS = -LC:\Program Files\Lua\lib -llua
 DISTRO_windows_TARGET = $(BIN_DIR)/$(TARGET_NAME).exe
+
+# Windows (MinGW)
+DISTRO_mingw_CC = x86_64-w64-mingw32-gcc
+DISTRO_mingw_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua
+DISTRO_mingw_LDFLAGS = -L/usr/x86_64-w64-mingw32/lib -llua
+DISTRO_mingw_TARGET = $(BIN_DIR)/$(TARGET_NAME).exe
 
 # Find all C source files recursively in src/
 SRCS := $(shell find $(SRC_DIR) -type f -name "*.c")
 
 # Extract unique directories containing source files
-DIRS := $(sort $(dir $(SRCS)))
+DIRS := $(sort $(dir $(SRCS)))cl
 
 # Default target redirects to help
 .PHONY: default
@@ -69,7 +75,8 @@ help:
 	@echo "  arch      - Build for Arch Linux"
 	@echo "  alpine    - Build for Alpine Linux"
 	@echo "  macos     - Build for macOS"
-	@echo "  windows   - Build for Windows (using MinGW)"
+	@echo "  windows   - Build for Windows (using MSVC)"
+	@echo "  mingw     - Build for Windows (using MinGW)"
 	@echo ""
 	@echo "Optional second argument:"
 	@echo "  clean     - Clean before building"
@@ -78,13 +85,51 @@ help:
 	@echo "Examples:"
 	@echo "  make debian       - Build for Debian"
 	@echo "  make arch clean   - Clean and build for Arch"
-	@echo "  make windows      - Build for Windows"
+	@echo "  make windows      - Build for Windows (MSVC)"
+	@echo "  make mingw        - Build for Windows (MinGW)"
 
 # Generic build rule for any distribution
-.PHONY: $(DEFAULT_DISTRO) debian arch alpine macos windows
-debian arch alpine macos windows:
+.PHONY: $(DEFAULT_DISTRO) debian arch alpine macos windows mingw
+debian arch alpine macos:
 	@echo "Building for $@ distribution..."
 	@$(MAKE) _build_target DISTRO=$@ ACTION=$(word 2, $(MAKECMDGOALS))
+
+windows:
+	@echo "Building for Windows (MSVC)..."
+	@$(MAKE) _build_windows ACTION=$(word 2, $(MAKECMDGOALS))
+
+mingw:
+	@echo "Building for Windows (MinGW)..."
+	@$(MAKE) _build_target DISTRO=$@ ACTION=$(word 2, $(MAKECMDGOALS))
+
+# Windows specific build rule (for MSVC)
+.PHONY: _build_windows
+_build_windows:
+	@if [ "$(ACTION)" = "clean" ]; then \
+		$(MAKE) _do_clean DISTRO=windows; \
+	fi
+	@echo "Setting up Windows build environment..."
+	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(BUILD_DIR)/windows
+	
+	@echo "Compiling source files with MSVC..."
+	@for src in $(SRCS); do \
+		obj=$$(echo $$src | sed 's|$(SRC_DIR)/|$(BUILD_DIR)/windows/|g' | sed 's/\.c/\.obj/g'); \
+		dir=$$(dirname $$obj); \
+		mkdir -p $$dir; \
+		echo "  $$src"; \
+		$(DISTRO_windows_CC) $(DISTRO_windows_CFLAGS) /c $$src /Fo$$obj; \
+	done
+	
+	@echo "Linking target: $(DISTRO_windows_TARGET)"
+	@objfiles=""; \
+	for src in $(SRCS); do \
+		obj=$$(echo $$src | sed 's|$(SRC_DIR)/|$(BUILD_DIR)/windows/|g' | sed 's/\.c/\.obj/g'); \
+		objfiles="$$objfiles $$obj"; \
+	done; \
+	$(DISTRO_windows_CC) $$objfiles $(DISTRO_windows_LDFLAGS) /Fe$(DISTRO_windows_TARGET)
+	
+	@echo "Build complete for Windows (MSVC)!"
 
 # If no second argument is given, default to "none"
 .PHONY: _build_target
