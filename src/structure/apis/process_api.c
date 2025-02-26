@@ -27,7 +27,7 @@ int process_platform(lua_State *L) {
 
 int process_exit(lua_State *L) {
     int exitCode = get_as_number(L, 1); // Ensure integer conversion
-    logf("Exiting application with code: %d", exitCode);
+    printlogf("Exiting application with code: %d", exitCode);
     fflush(stdout);
     exit(exitCode);
 }

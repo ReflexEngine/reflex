@@ -35,10 +35,10 @@ int env_set(lua_State *L) {
 
 // Register environment helper
 void register_environment_helper(LuaAPI *api) {
-    reflex_register_table_field(api, "reflex", "env", REFLEX_TYPE_TABLE);
-    reflex_register_table_field(api, "reflex.env", "get", REFLEX_TYPE_FUNCTION, env_get);
-    reflex_register_table_field(api, "reflex.env", "set", REFLEX_TYPE_FUNCTION, env_set);
-    reflex_register_table_field(api, "reflex.env", "load", REFLEX_TYPE_FUNCTION, load_env);
+    reflex_register_global_table(api, "env");
+    reflex_register_table_field(api, "env", "get", REFLEX_TYPE_FUNCTION, env_get);
+    reflex_register_table_field(api, "env", "set", REFLEX_TYPE_FUNCTION, env_set);
+    reflex_register_table_field(api, "env", "load", REFLEX_TYPE_FUNCTION, load_env);
 }
 
 int ReflexVersion(lua_State *L) {

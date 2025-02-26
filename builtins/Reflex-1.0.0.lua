@@ -17,15 +17,15 @@ function reflex.version() return "" end
 --- 
 --- This is the reflex environment manager, everything here is handled by the C api
 --- You can get, set, or load env files (loads System's Environment)
-reflex.env = {}
+env = {}
 
 --- Load a specific .env file from the filesystem.
-function reflex.env.load() end
+function env.load() end
 
 --- Resolves a key from the environment then returns the value of it
 ---@param key string Key from the environment
 ---@return string result Resolved value from the environment
-function reflex.env.get(key) return "" end
+function env.get(key) return "" end
 
 --- Replaces a key from the environment
 --- This doesn't change the actual environment in the system nor in the .env file
@@ -34,6 +34,6 @@ function reflex.env.get(key) return "" end
 ---@param key string Represents the key of the environment variable
 ---@param value string|nil Represents the value of the environment variable, nil for removal
 ---@return boolean
-function reflex.env.set(key, value) return true end
+function env.set(key, value) return true end
 
 package.reflex_path = ""

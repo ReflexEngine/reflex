@@ -2,13 +2,15 @@
 #include "fs.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h> // For getcwd()
 
-#define DEFAULT_PACKAGE_PATH "reflex_deps/?.lua"
+#define DEFAULT_PACKAGE_PATH "./reflex_deps/?.lua"
 
-static char package_path[256] = DEFAULT_PACKAGE_PATH;
+static char package_path[512];
 
 void reflex_set_package_path(const char *path) {
-    snprintf(package_path, sizeof(package_path), "%s?.lua", path);
+    snprintf(package_path, sizeof(package_path), "%s/reflex_deps/?.lua", path);
 }
 
 // Custom package loader function
@@ -53,11 +55,24 @@ int reflex_package_loader(lua_State *L) {
 void reflex_require_init(LuaAPI *api) {
     lua_State *L = api->L;
 
+    // Get current working directory
+    char cwd[256];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        snprintf(package_path, sizeof(package_path), "%s/reflex_deps/?.lua", cwd);
+    } else {
+        snprintf(package_path, sizeof(package_path), DEFAULT_PACKAGE_PATH);
+    }
+
     // Get package table
     lua_getglobal(L, "package");
 
-    // Set package.path to prioritize Reflex Engine modules
-    lua_pushfstring(L, "%s;%s", package_path, lua_tostring(L, -1));
+    // Append to existing package.path
+    lua_getfield(L, -1, "path");
+    const char *old_path = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
+    // Set the new package.path (prepend Reflex path)
+    lua_pushfstring(L, "%s;%s", package_path, old_path);
     lua_setfield(L, -2, "path");
 
     // Get package.searchers (or package.loaders in Lua 5.1)
