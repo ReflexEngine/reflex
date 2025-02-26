@@ -5,6 +5,7 @@
 #include "apis/process_api.h"
 #include "require.h"
 #include "version.h"
+#include "apis/reflex_logger_api.h"
 
 // Get environment variable
 int env_get(lua_State *L) {
@@ -55,4 +56,5 @@ void define_reflex_builtin(LuaAPI *api) {
     register_environment_helper(api);
     define_process_api(api);
     reflex_require_init(api);
+    define_logger_api(api);
 }

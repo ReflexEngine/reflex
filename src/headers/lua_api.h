@@ -24,6 +24,7 @@ void reflex_free(LuaAPI *api);
 
 // Registration functions
 void reflex_register_function(LuaAPI *api, const char *name, lua_CFunction func);
+void reflex_register_function_L(lua_State *L, const char *name, lua_CFunction func);
 void reflex_register_global_number(LuaAPI *api, const char *name, double value);
 void reflex_register_global_string(LuaAPI *api, const char *name, const char *value);
 void reflex_register_global_table(LuaAPI *api, const char *table_name);

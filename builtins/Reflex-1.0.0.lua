@@ -37,3 +37,37 @@ function env.get(key) return "" end
 function env.set(key, value) return true end
 
 package.reflex_path = ""
+
+--- # Reflex Logger API
+--- 
+--- Provides logging materials other than print. 
+--- Print can be overriden using `reflex.logger#overridePrint` to use `reflex.logger#info` instead of normal print.
+reflex.logger = {}
+
+--- Prints a information message to the console
+--- `INFO: <message>`
+---@param message string
+---@return true
+function reflex.logger.info(message) return true end
+
+--- Prints a warning message to the console
+--- `WARN: <message>`
+---@param message string
+---@return true
+function reflex.logger.warn(message) return true end
+
+--- Prints a error message to the console
+--- `ERROR: <message>`
+---@param message string
+---@return true
+function reflex.logger.error(message) return true end
+
+--- Prints a debugging message to the console
+--- `DEBUG: <message>`
+---@param message string
+---@return true
+function reflex.logger.debug(message) return true end
+
+--- Overrides the print method globally so it uses `logger#info`
+---@return boolean result Returns true if successful, false if not.
+function reflex.logger.overridePrint() return true end

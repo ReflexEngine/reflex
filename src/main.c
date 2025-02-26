@@ -1,7 +1,9 @@
 #include "fs.h"
 #include "args.h"
-#include "reflex_api.h"
+#include "lua_api.h"
+#include "error/LuaError.h"
 #include "apis/process_api.h"
+#include "reflex_api.h"
 #include "logger.h"
 #include <stdio.h>
 #include <string.h>
@@ -54,6 +56,10 @@ int handle_command(LuaAPI *api, Args *args) {
     }
 
     if (cmd.command && strcmp(cmd.command, "run") == 0) {
+        if (cmd.value_count == 0) {
+            printlogf("Error: No file specified for 'run' command.\n");
+            return 1;
+        }
         const char *fileName = cmd.values[0];
         if (!fileName) {
             printlogf("Error: No file specified for 'run' command.\n");
@@ -65,6 +71,7 @@ int handle_command(LuaAPI *api, Args *args) {
             printlogf("Error: Failed to read file '%s'.\n", fileName);
             return 1;
         }
+        define_reflex_builtin(api);
 
         Args reflex_args = {0}, lua_args = {0};
         split_args_at_double_dash(args, &reflex_args, &lua_args);
@@ -73,20 +80,41 @@ int handle_command(LuaAPI *api, Args *args) {
             printlogf("Debug mode enabled for Reflex execution.\n");
         }
 
-        define_reflex_builtin(api);
 
         if (lua_args.count > 0) {
             define_program_arguments(api, lua_args);
         }
 
-        int status = reflex_execute(api, contents);
-        if (status) {
-            const char *result = lua_tostring(api->L, -1);
-            fprintlogf(stderr, "Lua Error: %s\n", result);
+        // Set up the error handler before loading the script
+        lua_pushcfunction(api->L, lua_error_handler);
+        int error_handler_idx = lua_gettop(api->L);
+
+        // Load the script
+        int load_status = luaL_loadbuffer(api->L, contents, strlen(contents), fileName);
+        if (load_status != 0) {
+            // Handle syntax errors during loading
+            const char *error_msg = lua_tostring(api->L, -1);
+            
+            // Create error info structure
+            LuaErrorInfo errorInfo;
+            memset(&errorInfo, 0, sizeof(LuaErrorInfo));
+            
+            // We need to manually set this for load errors
+            strncpy(errorInfo.source, fileName, sizeof(errorInfo.source) - 1);
+            strncpy(errorInfo.message, error_msg, sizeof(errorInfo.message) - 1);
+            
+            // Print the error
+            lua_print_error(&errorInfo);
             return 1;
         }
-
-        return 0;
+        
+        // Execute the script with error handler
+        int result = lua_pcall(api->L, 0, LUA_MULTRET, error_handler_idx);
+        
+        // Remove the error handler from the stack
+        lua_remove(api->L, error_handler_idx);
+        
+        return result != 0 ? 1 : 0;
     }
 
     printlogf("Error: Unknown command '%s'. Try 'help' for usage.\n", cmd.command);
@@ -101,6 +129,7 @@ int main(int argc, char *argv[]) {
     int result = handle_command(api, &args);
 
     // Clean up and exit
+    reflex_free(api);
     args_free(&args);
     return result;
 }
