@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -I$(SRC_DIR)/headers -I./include
+CFLAGS = -Wall -Wextra -I$(SRC_DIR)/headers -I./usr/include
 LDFLAGS = -L/usr/lib -llua
 
 # Directories
