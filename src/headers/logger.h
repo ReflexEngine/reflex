@@ -5,7 +5,7 @@
 
 void println(const char* message);
 void fprintln(FILE* stream, const char* message);
-void logf(const char* format, ...);
-void flogf(FILE* stream, const char* format, ...);
+void printlogf(const char* format, ...);
+void fprintlogf(FILE* stream, const char* format, ...);
 
 #endif

@@ -7,19 +7,19 @@
 #include <string.h>
 
 void print_help() {
-    logf("Usage: reflex <command> [options]\n");
-    logf("\nAvailable commands:\n");
-    logf("  run <file.lua> [--debug] [--output <file>] [-- <lua-args>]\n");
-    logf("      Executes the specified Lua file.\n");
-    logf("      Options:\n");
-    logf("        --debug      Enable debug mode (prints additional debugging info).\n");
-    logf("        --            Separate Reflex arguments from Lua script arguments.\n");
+    printlogf("Usage: reflex <command> [options]\n");
+    printlogf("\nAvailable commands:\n");
+    printlogf("  run <file.lua> [--debug] [--output <file>] [-- <lua-args>]\n");
+    printlogf("      Executes the specified Lua file.\n");
+    printlogf("      Options:\n");
+    printlogf("        --debug      Enable debug mode (prints additional debugging info).\n");
+    printlogf("        --            Separate Reflex arguments from Lua script arguments.\n");
 
-    logf("\nExample usage:\n");
-    logf("  reflex run my_script.lua --debug -- --mainluaarg\n");
-    logf("      Executes 'my_script.lua' with the Lua argument '--mainluaarg'.\n");
+    printlogf("\nExample usage:\n");
+    printlogf("  reflex run my_script.lua --debug -- --mainluaarg\n");
+    printlogf("      Executes 'my_script.lua' with the Lua argument '--mainluaarg'.\n");
 
-    logf("\nFor more information, visit the documentation at https://github.com/reflexengine/reflex/wiki\n");
+    printlogf("\nFor more information, visit the documentation at https://github.com/reflexengine/reflex/wiki\n");
 }
 
 void split_args_at_double_dash(Args *args, Args *reflex_args, Args *lua_args) {
@@ -56,13 +56,13 @@ int handle_command(LuaAPI *api, Args *args) {
     if (cmd.command && strcmp(cmd.command, "run") == 0) {
         const char *fileName = cmd.values[0];
         if (!fileName) {
-            logf("Error: No file specified for 'run' command.\n");
+            printlogf("Error: No file specified for 'run' command.\n");
             return 1;
         }
 
         const char *contents = fs_read(fileName);
         if (!contents) {
-            logf("Error: Failed to read file '%s'.\n", fileName);
+            printlogf("Error: Failed to read file '%s'.\n", fileName);
             return 1;
         }
 
@@ -70,7 +70,7 @@ int handle_command(LuaAPI *api, Args *args) {
         split_args_at_double_dash(args, &reflex_args, &lua_args);
 
         if (args_has_flag(&reflex_args, "--debug")) {
-            logf("Debug mode enabled for Reflex execution.\n");
+            printlogf("Debug mode enabled for Reflex execution.\n");
         }
 
         define_reflex_builtin(api);
@@ -82,14 +82,14 @@ int handle_command(LuaAPI *api, Args *args) {
         int status = reflex_execute(api, contents);
         if (status) {
             const char *result = lua_tostring(api->L, -1);
-            flogf(stderr, "Lua Error: %s\n", result);
+            fprintlogf(stderr, "Lua Error: %s\n", result);
             return 1;
         }
 
         return 0;
     }
 
-    logf("Error: Unknown command '%s'. Try 'help' for usage.\n", cmd.command);
+    printlogf("Error: Unknown command '%s'. Try 'help' for usage.\n", cmd.command);
     return 1;
 }
 

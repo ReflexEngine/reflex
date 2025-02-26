@@ -12,7 +12,7 @@ void fprintln(FILE* stream, const char* message) {
 }
 
 // Prints a formatted message, like printf but with automatic newline
-void logf(const char* format, ...) {
+void printlogf(const char* format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -25,7 +25,7 @@ void logf(const char* format, ...) {
     va_end(args);
 }
 
-void flogf(FILE* stream, const char* format, ...) {
+void fprintlogf(FILE* stream, const char* format, ...) {
     va_list args;
     va_start(args, format);
 
