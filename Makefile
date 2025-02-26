@@ -22,37 +22,37 @@ DEFAULT_DISTRO = debian
 DISTRO_debian_CC = gcc
 DISTRO_debian_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua5.4
 DISTRO_debian_LDFLAGS = -L/usr/lib -llua5.4
-DISTRO_debian_TARGET = $(BIN_DIR)/$(TARGET_NAME)
+DISTRO_debian_TARGET = $(BIN_DIR)/$(TARGET_NAME)-deb
 
 # Arch Linux
 DISTRO_arch_CC = gcc
 DISTRO_arch_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua
 DISTRO_arch_LDFLAGS = -L/usr/lib -llua
-DISTRO_arch_TARGET = $(BIN_DIR)/$(TARGET_NAME)
+DISTRO_arch_TARGET = $(BIN_DIR)/$(TARGET_NAME)-arch
 
 # Alpine Linux
 DISTRO_alpine_CC = gcc
 DISTRO_alpine_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua5.4
 DISTRO_alpine_LDFLAGS = -L/usr/lib -llua5.4
-DISTRO_alpine_TARGET = $(BIN_DIR)/$(TARGET_NAME)
+DISTRO_alpine_TARGET = $(BIN_DIR)/$(TARGET_NAME)-alpine
 
 # macOS
 DISTRO_macos_CC = clang
 DISTRO_macos_CFLAGS = $(BASE_CFLAGS) -I/usr/local/include -I/usr/local/include/lua
 DISTRO_macos_LDFLAGS = -L/usr/local/lib -llua
-DISTRO_macos_TARGET = $(BIN_DIR)/$(TARGET_NAME)
+DISTRO_macos_TARGET = $(BIN_DIR)/$(TARGET_NAME)-macos
 
 # Windows (MSVC)
 DISTRO_windows_CC = gcc
 DISTRO_windows_CFLAGS = $(BASE_CFLAGS) -IC:\Program Files\Lua\include
 DISTRO_windows_LDFLAGS = -LC:\Program Files\Lua\lib -llua
-DISTRO_windows_TARGET = $(BIN_DIR)/$(TARGET_NAME).exe
+DISTRO_windows_TARGET = $(BIN_DIR)/$(TARGET_NAME)-msvc.exe
 
 # Windows (MinGW)
 DISTRO_mingw_CC = x86_64-w64-mingw32-gcc
 DISTRO_mingw_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua
 DISTRO_mingw_LDFLAGS = -L/usr/x86_64-w64-mingw32/lib -llua
-DISTRO_mingw_TARGET = $(BIN_DIR)/$(TARGET_NAME).exe
+DISTRO_mingw_TARGET = $(BIN_DIR)/$(TARGET_NAME)-mingw.exe
 
 # Find all C source files recursively in src/
 SRCS := $(shell find $(SRC_DIR) -type f -name "*.c")

@@ -2,7 +2,7 @@
 #include "lua_api.h"
 #include "logger.h"
 
-void logger_info(lua_State* L) {
+int logger_info(lua_State* L) {
     
     char* info = colorize("INFO:", COLOR_GREEN);
     char* message = get_as_string(L, 1);
@@ -11,7 +11,7 @@ void logger_info(lua_State* L) {
 
 }
 
-void logger_warn(lua_State* L) {
+int logger_warn(lua_State* L) {
     
     char* info = colorize("WARN:", COLOR_YELLOW);
     char* message = get_as_string(L, 1);
@@ -20,7 +20,7 @@ void logger_warn(lua_State* L) {
 
 }
 
-void logger_error(lua_State* L) {
+int logger_error(lua_State* L) {
  
     char* info = colorize("ERROR:", COLOR_RED);
     char* message = get_as_string(L, 1);
@@ -29,7 +29,7 @@ void logger_error(lua_State* L) {
 
 }
 
-void logger_debug(lua_State* L) {
+int logger_debug(lua_State* L) {
     
     char* info = colorize("DEBUG:", COLOR_MAGENTA);
     char* message = get_as_string(L, 1);
@@ -38,7 +38,7 @@ void logger_debug(lua_State* L) {
 
 }
 
-void logger_override_print(lua_State* L) {
+int logger_override_print(lua_State* L) {
 
     reflex_register_function_L(L, "print", logger_info);
     return lua_return(L, REFLEX_TYPE_BOOLEAN, 1);
