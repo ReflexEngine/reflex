@@ -19,7 +19,7 @@ jobs:
       matrix:
         distro: [debian, arch, alpine]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Install dependencies for ${{ matrix.distro }}
         run: |
@@ -42,7 +42,7 @@ jobs:
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.distro }}
       
       - name: Upload ${{ matrix.distro }} artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: reflex-${{ matrix.distro }}
           path: binout/reflex
@@ -51,7 +51,7 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Install dependencies
         run: |
@@ -62,7 +62,7 @@ jobs:
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == 'macos' }}
       
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: reflex-macos
           path: binout/reflex
@@ -74,7 +74,7 @@ jobs:
       matrix:
         build_type: [windows, mingw]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup MinGW
         uses: egor-tensin/setup-mingw@v2
@@ -88,7 +88,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path "C:\Program Files\Lua\lib"
           
           # Download and extract Lua for Windows
-          Invoke-WebRequest -Uri "https://sourceforge.net/projects/luabinaries/files/5.4.3/Windows%20Libraries/Dynamic/lua-5.4.3_Win64_dllw6_lib.zip" -OutFile "lua.zip"
+          Invoke-WebRequest -Uri "https://sourceforge.net/projects/luabinaries/files/5.4.6/Windows%20Libraries/Dynamic/lua-5.4.6_Win64_dllw6_lib.zip" -OutFile "lua.zip"
           Expand-Archive -Path "lua.zip" -DestinationPath "C:\temp\lua" -Force
           
           # Copy files to the expected locations
@@ -114,7 +114,7 @@ jobs:
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
       
       - name: Upload ${{ matrix.build_type }} artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: reflex-${{ matrix.build_type }}
           path: binout/reflex.exe
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Create version number
         id: version
@@ -133,7 +133,7 @@ jobs:
           echo "VERSION=$(date +'%Y.%m.%d')_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ./dist
       
@@ -154,7 +154,7 @@ jobs:
           cd release && zip -r ReflexEngine-${{ steps.version.outputs.VERSION }}.zip ReflexEngine-${{ steps.version.outputs.VERSION }}
       
       - name: Upload release archive
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ReflexEngine-${{ steps.version.outputs.VERSION }}
           path: |
