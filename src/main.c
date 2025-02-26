@@ -43,17 +43,6 @@ void split_args_at_double_dash(Args *args, Args *reflex_args, Args *lua_args) {
 
     lua_args->count = args->count - split_index - 1;
     lua_args->values = &args->values[split_index + 1];
-    
-    // Debug logs to check the argument splitting
-    logf("Reflex Args:\n");
-    for (int i = 0; i < reflex_args->count; i++) {
-        logf("  %s\n", reflex_args->values[i]);
-    }
-    
-    logf("Lua Args:\n");
-    for (int i = 0; i < lua_args->count; i++) {
-        logf("  %s\n", lua_args->values[i]);
-    }
 }
 
 int handle_command(LuaAPI *api, Args *args) {
