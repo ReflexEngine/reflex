@@ -30,16 +30,16 @@ jobs:
         run: |
           if [ "${{ matrix.distro }}" = "debian" ]; then
             sudo apt-get update
-            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
+            sudo apt-get install -y build-essential gcc make lua5.4 liblua5.4-dev libuv1-dev
           elif [ "${{ matrix.distro }}" = "arch" ]; then
             # Docker container for arch could be used here
             # For GitHub runner, we'll install similar packages via apt
             sudo apt-get update
-            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
+            sudo apt-get install -y build-essential gcc make lua5.4 liblua5.4-dev libuv1-dev
           elif [ "${{ matrix.distro }}" = "alpine" ]; then
             # Similar approach for alpine
             sudo apt-get update
-            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
+            sudo apt-get install -y build-essential gcc make lua5.4 liblua5.4-dev libuv1-dev
           fi
       
       - name: List installed package locations for ${{ matrix.distro }}

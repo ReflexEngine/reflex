@@ -45,10 +45,20 @@ DISTRO_alpine_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua5.4
 DISTRO_alpine_LDFLAGS = $(BASE_LDFLAGS) -L/usr/lib -llua5.4 -luv
 DISTRO_alpine_TARGET = $(BIN_DIR)/$(TARGET_NAME)-alpine
 
-# macOS
+# macOS (Intel or Apple Silicon)
 DISTRO_macos_CC = gcc
-DISTRO_macos_CFLAGS = $(BASE_CFLAGS) -I/usr/local/include -I/usr/local/include/lua -I/usr/include -I/usr/include/lua
-DISTRO_macos_LDFLAGS = $(BASE_LDFLAGS) -L/usr/local/lib -L/usr/lib -llua -luv
+DISTRO_macos_CFLAGS = $(BASE_CFLAGS) $(shell \
+	if [ "`uname -m`" = "arm64" ]; then \
+		echo "-I/opt/homebrew/include -I/usr/include -I/opt/homebrew/include/lua"; \
+	else \
+		echo "-I/usr/local/include -I/usr/include -I/usr/local/include/lua"; \
+	fi)
+DISTRO_macos_LDFLAGS = $(BASE_LDFLAGS) $(shell \
+	if [ "`uname -m`" = "arm64" ]; then \
+		echo "-L/opt/homebrew/lib -L/usr/lib -llua -luv"; \
+	else \
+		echo "-L/usr/local/lib -L/usr/lib -llua -luv"; \
+	fi)
 DISTRO_macos_TARGET = $(BIN_DIR)/$(TARGET_NAME)-macos
 
 # Windows (MSVC)
