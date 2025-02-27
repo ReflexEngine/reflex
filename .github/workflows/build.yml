@@ -94,7 +94,10 @@ jobs:
       - name: Create version number
         id: version
         run: |
-          echo "VERSION=$(date +'%Y.%m.%d')_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          VERSION=$(date +'%Y.%m.%d')_$(git rev-parse --short HEAD)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
       
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -103,23 +106,20 @@ jobs:
       
       - name: Create distribution structure
         run: |
-          mkdir -p release
-          mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}
-          cp -r ./README.md ./LICENSE ./src release/ReflexEngine-${{ steps.version.outputs.VERSION }}/
-          mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin
-          
-          # Debug artifact structure
-          find ./binout -type f | sort
-          
+          mkdir -p release/ReflexEngine-${{ env.VERSION }}
+          cp -r ./README.md ./LICENSE ./src release/ReflexEngine-${{ env.VERSION }}/
+          mkdir -p release/ReflexEngine-${{ env.VERSION }}/bin
+
           # Copy binaries using correct path patterns from the Makefile
-          cp ./binout/reflex-debian/reflex-debian release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian || echo "Warning: debian build not found"
-          cp ./binout/reflex-arch/reflex-arch release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch || echo "Warning: arch build not found"
-          cp ./binout/reflex-alpine/reflex-alpine release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine || echo "Warning: alpine build not found"
-          cp ./binout/reflex-macos/reflex-macos release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos || echo "Warning: macos build not found"
-          
+          cp ./binout/reflex-debian/reflex-debian release/ReflexEngine-${{ env.VERSION }}/bin/reflex-debian || echo "Warning: debian build not found"
+          cp ./binout/reflex-arch/reflex-arch release/ReflexEngine-${{ env.VERSION }}/bin/reflex-arch || echo "Warning: arch build not found"
+          cp ./binout/reflex-alpine/reflex-alpine release/ReflexEngine-${{ env.VERSION }}/bin/reflex-alpine || echo "Warning: alpine build not found"
+          cp ./binout/reflex-macos/reflex-macos release/ReflexEngine-${{ env.VERSION }}/bin/reflex-macos || echo "Warning: macos build not found"
+
           # Create archive files
-          cd release && tar -czvf ReflexEngine-${{ steps.version.outputs.VERSION }}.tar.gz ReflexEngine-${{ steps.version.outputs.VERSION }}
-          cd release && zip -r ReflexEngine-${{ steps.version.outputs.VERSION }}.zip ReflexEngine-${{ steps.version.outputs.VERSION }}
+          tar -czvf release/ReflexEngine-${{ env.VERSION }}.tar.gz -C release ReflexEngine-${{ env.VERSION }}
+          zip -r release/ReflexEngine-${{ env.VERSION }}.zip release/ReflexEngine-${{ env.VERSION }}
+
       
       - name: Upload release archive
         uses: actions/upload-artifact@v4
