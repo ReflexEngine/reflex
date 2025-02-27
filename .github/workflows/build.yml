@@ -52,6 +52,7 @@ jobs:
             which make
             echo "Lua libraries:"
             find /usr -name "liblua*" | sort
+            find /usr -name "lua*" | sort
             echo "libuv libraries:"
             find /usr -name "libuv*" | sort
             echo "Include directories:"
@@ -116,63 +117,8 @@ jobs:
           path: binout/reflex-macos
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == 'macos' }}
 
-  build-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        build_type: [mingw]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup MinGW
-        uses: egor-tensin/setup-mingw@v2
-        if: ${{ matrix.build_type == 'mingw' }}
-
-      - name: Install MSYS2 dependencies
-        if: ${{ matrix.build_type == 'mingw' }}
-        run: |
-          C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-lua mingw-w64-x86_64-libuv
-        shell: cmd
-
-      - name: List installed package locations
-        if: ${{ matrix.build_type == 'mingw' }}
-        run: |
-          echo "Listing locations of installed dependencies for Windows (${{ matrix.build_type }}):"
-          echo "gcc location:"
-          which gcc
-          echo "make location:"
-          which make
-          echo "MSYS2 package locations:"
-          echo "Lua libraries:"
-          find /c/msys64/mingw64 -name "liblua*" | sort
-          echo "libuv libraries:"
-          find /c/msys64/mingw64 -name "libuv*" | sort
-          echo "Include directories:"
-          ls -la /c/msys64/mingw64/include/lua* || echo "No Lua include directories found"
-          ls -la /c/msys64/mingw64/include/uv* || echo "No libuv include directories found"
-        shell: bash
-      
-      - name: Run configure script for ${{ matrix.build_type }}
-        if: ${{ matrix.build_type == 'mingw' }}
-        run: |
-          chmod +x ./configure.sh
-          ./configure.sh ${{ matrix.build_type }}
-        shell: bash
-      
-      - name: Build for ${{ matrix.build_type }}
-        run: make ${{ matrix.build_type }}
-        if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
-        shell: bash
-      
-      - name: Upload ${{ matrix.build_type }} artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: reflex-${{ matrix.build_type }}
-          path: binout/reflex-mingw.exe
-        if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
-
   create-release-archive:
-    needs: [build-linux-distros, build-macos, build-windows]
+    needs: [build-linux-distros, build-macos]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
@@ -202,7 +148,6 @@ jobs:
           cp ./dist/reflex-arch/reflex-arch release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch || echo "Warning: arch build not found"
           cp ./dist/reflex-alpine/reflex-alpine release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine || echo "Warning: alpine build not found"
           cp ./dist/reflex-macos/reflex-macos release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos || echo "Warning: macos build not found"
-          cp ./dist/reflex-mingw/reflex-mingw.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-mingw.exe || echo "Warning: mingw build not found"
           
           # Create archive files
           cd release && tar -czvf ReflexEngine-${{ steps.version.outputs.VERSION }}.tar.gz ReflexEngine-${{ steps.version.outputs.VERSION }}
