@@ -20,6 +20,7 @@ typedef enum {
 
 // API management functions
 LuaAPI* reflex_new();
+LuaAPI* reflex_from(lua_State* L);
 void reflex_free(LuaAPI *api);
 
 // Registration functions
@@ -28,6 +29,7 @@ void reflex_register_function_L(lua_State *L, const char *name, lua_CFunction fu
 void reflex_register_global_number(LuaAPI *api, const char *name, double value);
 void reflex_register_global_string(LuaAPI *api, const char *name, const char *value);
 void reflex_register_global_table(LuaAPI *api, const char *table_name);
+void reflex_register_global_table_L(lua_State *L, const char *table_name);
 void reflex_register_table_field(LuaAPI *api, const char *table_name, const char *key, ReflexType type, ...);
 
 // Lua return helper

@@ -3,5 +3,6 @@
 
 const char* getVersion();
 const char* getLuaVersion();
+const char* getLibuvVerison();
 
 #endif

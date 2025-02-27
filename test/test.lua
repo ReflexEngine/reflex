@@ -10,7 +10,6 @@ print("Hello World from Reflex Engine!")
 print("Platform: ".. process.platform())
 print("Pid: ".. process.pid())
 
-local version = process.versions()
-
-print("Reflex Version: ".. version.reflex)
-print("Lua Version: ".. version.lua)
+for i, v in pairs(process.versions) do
+    print(i, v)
+end

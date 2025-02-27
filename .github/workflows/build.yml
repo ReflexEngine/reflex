@@ -25,11 +25,11 @@ jobs:
         run: |
           if [[ "${{ matrix.distro }}" == "debian" ]]; then
             sudo apt-get update
-            sudo apt-get install -y liblua5.4-dev
+            sudo apt-get install -y liblua5.4-dev libuv1-dev
           elif [[ "${{ matrix.distro }}" == "arch" ]]; then
             # Simulate Arch dependencies on Ubuntu
             sudo apt-get update
-            sudo apt-get install -y liblua5.1-0-dev
+            sudo apt-get install -y liblua5.1-0-dev libuv1-dev
             sudo ln -sf /usr/include/lua5.1 /usr/include/lua
           elif [[ "${{ matrix.distro }}" == "alpine" ]]; then
             # Simulate Alpine dependencies on Ubuntu
@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: reflex-${{ matrix.distro }}
-          path: binout/reflex
+          path: binout/reflex-${{ matrix.distro }}
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.distro }}
 
   build-macos:
@@ -55,7 +55,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          brew install lua
+          brew install lua libuv
       
       - name: Build for macOS
         run: make macos
@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: reflex-macos
-          path: binout/reflex
+          path: binout/reflex-macos
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == 'macos' }}
 
   build-windows:
@@ -82,20 +82,24 @@ jobs:
 
       - name: Install dependencies for MinGW
         if: ${{ matrix.build_type == 'mingw' }}
-        shell: bash
         run: |
-          pacman -S lua
+          # Install Lua for MinGW
+          choco install lua
+          # Create necessary links to include files
+          mkdir -p /usr/include
+          ln -sf "C:/Program Files (x86)/Lua/5.1/include" /usr/include/lua
+        shell: bash
       
       - name: Build for ${{ matrix.build_type }}
-        shell: bash
         run: make ${{ matrix.build_type }}
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
+        shell: bash
       
       - name: Upload ${{ matrix.build_type }} artifacts
         uses: actions/upload-artifact@v4
         with:
           name: reflex-${{ matrix.build_type }}
-          path: binout/reflex.exe
+          path: binout/reflex-mingw.exe
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
 
   create-release-archive:
@@ -121,13 +125,14 @@ jobs:
           cp -r ./README.md ./LICENSE ./src release/ReflexEngine-${{ steps.version.outputs.VERSION }}/
           mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin
           
-          cp ./dist/reflex-debian/reflex release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian
-          cp ./dist/reflex-arch/reflex release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch
-          cp ./dist/reflex-alpine/reflex release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine
-          cp ./dist/reflex-macos/reflex release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos
-          cp ./dist/reflex-windows/reflex.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-windows.exe
-          cp ./dist/reflex-mingw/reflex.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-mingw.exe
+          # Copy binaries using correct path patterns from the Makefile
+          cp ./dist/reflex-debian/reflex-debian release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian
+          cp ./dist/reflex-arch/reflex-arch release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch
+          cp ./dist/reflex-alpine/reflex-alpine release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine
+          cp ./dist/reflex-macos/reflex-macos release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos
+          cp ./dist/reflex-mingw/reflex-mingw.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-mingw.exe
           
+          # Create archive files
           cd release && tar -czvf ReflexEngine-${{ steps.version.outputs.VERSION }}.tar.gz ReflexEngine-${{ steps.version.outputs.VERSION }}
           cd release && zip -r ReflexEngine-${{ steps.version.outputs.VERSION }}.zip ReflexEngine-${{ steps.version.outputs.VERSION }}
       

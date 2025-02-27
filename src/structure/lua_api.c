@@ -20,6 +20,21 @@ LuaAPI* reflex_new(void) {
     return api;
 }
 
+LuaAPI* reflex_from(lua_State* L) {
+    LuaAPI *api = (LuaAPI*)malloc(sizeof(LuaAPI));
+    if (!api) {
+        return NULL;
+    }
+    
+    api->L = L;
+    if (!api->L) {
+        free(api);
+        return NULL;
+    }
+    
+    return api;
+}
+
 void reflex_free(LuaAPI *api) {
     if (!api) {
         return;
@@ -68,8 +83,16 @@ void reflex_register_global_table(LuaAPI *api, const char *table_name) {
         return;
     }
     
-    lua_newtable(api->L);
-    lua_setglobal(api->L, table_name);
+    reflex_register_global_table_L(api->L, table_name);
+}
+
+void reflex_register_global_table_L(lua_State *L, const char *table_name) {
+    if (!L || !table_name) {
+        return;
+    }
+    
+    lua_newtable(L);
+    lua_setglobal(L, table_name);
 }
 
 static void navigate_lua_stack(LuaAPI *api, const char *path) {

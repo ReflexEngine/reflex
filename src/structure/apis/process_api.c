@@ -45,19 +45,13 @@ int process_version(lua_State *L) {
 
 }
 
-int process_versions(lua_State *L) {
-    reflex_create_table_L(L);
+int process_versions(LuaAPI *api) {
+    
+    reflex_register_table_field(api, "process", "versions", REFLEX_TYPE_TABLE);
+    reflex_register_table_field(api, "process.versions", "reflex", REFLEX_TYPE_STRING, getVersion());
+    reflex_register_table_field(api, "process.versions", "lua", REFLEX_TYPE_STRING, getLuaVersion());
+    reflex_register_table_field(api, "process.versions", "uv", REFLEX_TYPE_STRING, getLibuvVerison());
 
-    // Reflex Version
-    lua_pushstring(L, "reflex");
-    reflex_push_L(L, REFLEX_TYPE_STRING, getVersion());
-    lua_settable(L, -3);
-
-    lua_pushstring(L, "lua");
-    reflex_push_L(L, REFLEX_TYPE_STRING, getLuaVersion());
-    lua_settable(L, -3);
-
-    return 1;
 }
 
 void define_program_arguments(LuaAPI *api, Args args) {
@@ -88,5 +82,5 @@ void define_process_api(LuaAPI *api)
     reflex_register_table_field(api, "process", "pid", REFLEX_TYPE_FUNCTION, process_pid);
     reflex_register_table_field(api, "process", "exit", REFLEX_TYPE_FUNCTION, process_exit);
     reflex_register_table_field(api, "process", "version", REFLEX_TYPE_FUNCTION, process_version);
-    reflex_register_table_field(api, "process", "versions", REFLEX_TYPE_FUNCTION, process_versions);
+    process_versions(api);
 }

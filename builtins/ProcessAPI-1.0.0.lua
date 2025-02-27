@@ -20,9 +20,9 @@ function process.exit(code) return nil end
 ---@return string The resulted version of reflex
 function process.version() return "" end
 
---- Returns the version of every library used by reflex
----@return Versions
-function process.versions() return {} end
+--- Returns the version list used in the runtime
+--- @class Versions
+process.versions = {}
 
 --- Includes a list of arguments given to the script  
 ---   
@@ -35,4 +35,5 @@ process.argv = {}
 --- @class Versions
 --- @field reflex string Reflex Version
 --- @field lua string Lua Version
+--- @field uv string Libuv & Luv version
 local versions = {}
