@@ -31,7 +31,7 @@ endif
 DISTRO_debian_CC = gcc
 DISTRO_debian_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua5.4
 DISTRO_debian_LDFLAGS = $(BASE_LDFLAGS) -L/usr/lib -llua5.4 -luv
-DISTRO_debian_TARGET = $(BIN_DIR)/$(TARGET_NAME)-deb
+DISTRO_debian_TARGET = $(BIN_DIR)/$(TARGET_NAME)-debian
 
 # Arch Linux
 DISTRO_arch_CC = gcc

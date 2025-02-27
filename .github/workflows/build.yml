@@ -108,7 +108,7 @@ jobs:
           mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin
           
           # Debug artifact structure
-          find ./dist -type f | sort
+          find ./binout -type f | sort
           
           # Copy binaries using correct path patterns from the Makefile
           cp ./binout/reflex-debian/reflex-debian release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian || echo "Warning: debian build not found"
