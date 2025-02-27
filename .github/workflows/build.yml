@@ -26,6 +26,22 @@ jobs:
           echo "Building for ${{ matrix.distro }}"
           echo "Specific distro parameter: '${{ github.event.inputs.specific_distro }}'"
       
+      - name: Install dependencies for ${{ matrix.distro }}
+        run: |
+          if [ "${{ matrix.distro }}" = "debian" ]; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
+          elif [ "${{ matrix.distro }}" = "arch" ]; then
+            # Docker container for arch could be used here
+            # For GitHub runner, we'll install similar packages via apt
+            sudo apt-get update
+            sudo apt-get install -y build-essential gcc make liblua5.3-dev libuv1-dev
+          elif [ "${{ matrix.distro }}" = "alpine" ]; then
+            # Similar approach for alpine
+            sudo apt-get update
+            sudo apt-get install -y build-essential gcc make liblua5.3-dev libuv1-dev
+          fi
+      
       - name: Run configure script for ${{ matrix.distro }}
         run: |
           chmod +x ./configure.sh
@@ -46,6 +62,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install lua libuv
       
       - name: Run configure script
         run: |
@@ -74,6 +95,12 @@ jobs:
       - name: Setup MinGW
         uses: egor-tensin/setup-mingw@v2
         if: ${{ matrix.build_type == 'mingw' }}
+
+      - name: Install MSYS2 dependencies
+        if: ${{ matrix.build_type == 'mingw' }}
+        run: |
+          C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-lua mingw-w64-x86_64-libuv
+        shell: cmd
 
       - name: Run configure script for ${{ matrix.build_type }}
         if: ${{ matrix.build_type == 'mingw' }}

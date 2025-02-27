@@ -72,6 +72,11 @@ command_exists() {
 
 # Ask for confirmation
 confirm() {
+  # If we're in non-interactive mode, assume yes
+  if [ "$AUTO_MODE" = true ]; then
+    return 0
+  fi
+  
   echo -en " ${WARNING}${BOLD}?${RESET} $1 [Y/n] "
   read -r response
   case "$response" in
@@ -109,6 +114,12 @@ show_spinner() {
 detect_os() {
   print_header "SYSTEM DETECTION"
   
+  # If OS is already set via command line, skip detection
+  if [ -n "$OS" ]; then
+    print_success "Using specified OS/distribution: $OS"
+    return 0
+  fi
+  
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Detect Linux distribution
     if command_exists apt-get; then
@@ -133,20 +144,28 @@ detect_os() {
     OS="macos"
     print_success "Detected macOS"
   elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ "$OSTYPE" == "cygwin" ]]; then
-    print_info "Detected Windows environment"
-    echo
-    echo -e " ${BG_DGRAY}${WHITE} 1 ${RESET} MSVC (Visual Studio)"
-    echo -e " ${BG_DGRAY}${WHITE} 2 ${RESET} MinGW"
-    echo
-    echo -en " ${WARNING}${BOLD}?${RESET} Select Windows build environment [1/2]: "
-    read -r win_choice
-    
-    if [[ "$win_choice" == "1" ]]; then
-      OS="windows"
-      print_success "Selected MSVC (Visual Studio) environment"
+    if [ "$AUTO_MODE" = true ]; then
+      # Default to MinGW in auto mode if not specified
+      if [ "$OS" != "windows" ]; then
+        OS="mingw"
+      fi
+      print_success "Selected $OS environment (auto mode)"
     else
-      OS="mingw"
-      print_success "Selected MinGW environment"
+      print_info "Detected Windows environment"
+      echo
+      echo -e " ${BG_DGRAY}${WHITE} 1 ${RESET} MSVC (Visual Studio)"
+      echo -e " ${BG_DGRAY}${WHITE} 2 ${RESET} MinGW"
+      echo
+      echo -en " ${WARNING}${BOLD}?${RESET} Select Windows build environment [1/2]: "
+      read -r win_choice
+      
+      if [[ "$win_choice" == "1" ]]; then
+        OS="windows"
+        print_success "Selected MSVC (Visual Studio) environment"
+      else
+        OS="mingw"
+        print_success "Selected MinGW environment"
+      fi
     fi
   else
     print_error "Unsupported operating system: $OSTYPE"
@@ -160,6 +179,12 @@ install_dependencies() {
   
   case $OS in
     debian)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency installation in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       print_status "APT" "Updating package lists..."
       sudo apt-get update -q > /dev/null &
       show_spinner $! "Updating package lists..."
@@ -181,6 +206,12 @@ install_dependencies() {
       ;;
       
     arch)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency installation in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       print_status "PACMAN" "Updating package database..."
       sudo pacman -Sy --noconfirm > /dev/null &
       show_spinner $! "Updating package database..."
@@ -202,6 +233,12 @@ install_dependencies() {
       ;;
       
     alpine)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency installation in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       print_status "APK" "Updating package lists..."
       sudo apk update > /dev/null &
       show_spinner $! "Updating package lists..."
@@ -223,6 +260,12 @@ install_dependencies() {
       ;;
       
     macos)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency installation in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       if ! command_exists brew; then
         print_error "Homebrew is required but not installed"
         print_info "Please install Homebrew first:"
@@ -251,6 +294,12 @@ install_dependencies() {
       ;;
       
     windows)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency check in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       print_warning "For Windows MSVC, please ensure you have:"
       print_info "1. Visual Studio with C++ development tools installed"
       print_info "2. Lua development files in C:\\Program Files\\Lua"
@@ -265,6 +314,12 @@ install_dependencies() {
       ;;
       
     mingw)
+      if [ "$AUTO_MODE" = true ]; then
+        print_info "Skipping dependency check in CI environment"
+        print_success "Assuming dependencies are installed"
+        return 0
+      fi
+      
       print_warning "For MinGW builds, please ensure you have:"
       print_info "1. MSYS2 installed from https://www.msys2.org/"
       print_info "2. Run the following command in MSYS2 shell:"
@@ -283,6 +338,12 @@ install_dependencies() {
 # ----- VERIFY INSTALLATION -----
 verify_tools() {
   print_header "VERIFICATION"
+  
+  if [ "$AUTO_MODE" = true ]; then
+    print_info "Skipping tool verification in CI environment"
+    print_success "Assuming required tools are available"
+    return 0
+  fi
   
   # Check for make
   if command_exists make; then
@@ -353,6 +414,9 @@ create_config_file() {
   config_file="config.mk"
   print_status "CONFIG" "Writing to $config_file"
   
+  # Ensure binout directory exists
+  mkdir -p binout
+  
   cat > "$config_file" << EOF
 # Auto-generated by configure.sh
 # ReflexEngine build configuration
@@ -366,8 +430,8 @@ EOF
   print_success "Configuration saved to $config_file"
 }
 
-# ----- MAIN FUNCTION -----
-main() {
+# ----- SHOW LOGO -----
+show_logo() {
   clear
   echo
   # Modern ASCII art logo with cleaner lines and monospace alignment
@@ -382,7 +446,41 @@ main() {
   echo -e "${ACCENT}┃${BG_DGRAY}${WHITE}${BOLD}                      ENGINE CONFIGURATION                       ${ACCENT}┃${RESET}"
   echo -e "${ACCENT}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛${RESET}"
   echo
+}
 
+# ----- PARSE COMMAND LINE ARGS -----
+parse_args() {
+  # Check if we have arguments
+  if [ $# -gt 0 ]; then
+    # Set auto mode for non-interactive usage
+    AUTO_MODE=true
+    
+    # First argument is the OS/distro
+    case "$1" in
+      debian|arch|alpine|macos|windows|mingw)
+        OS="$1"
+        ;;
+      *)
+        print_error "Unknown OS/distribution: $1"
+        print_info "Valid options: debian, arch, alpine, macos, windows, mingw"
+        exit 1
+        ;;
+    esac
+  else
+    AUTO_MODE=false
+  fi
+}
+
+# ----- MAIN FUNCTION -----
+main() {
+  # Parse command line arguments
+  parse_args "$@"
+  
+  # Only show logo in interactive mode
+  if [ "$AUTO_MODE" = false ]; then
+    show_logo
+  fi
+  
   # Detect OS
   detect_os
   
@@ -398,18 +496,22 @@ main() {
   # Create config file
   create_config_file
   
-  # Final success message
-  print_header "BUILD READY"
-  print_success "Configuration complete! You can now build ReflexEngine with:"
-  echo
-  echo -e "    ${ACCENT}${BOLD}make $OS${RESET}"
-  echo
-  
-  print_info "For more build options, run:"
-  echo
-  echo -e "    ${ACCENT}${BOLD}make help${RESET}"
-  echo
+  # Final success message (only in interactive mode)
+  if [ "$AUTO_MODE" = false ]; then
+    print_header "BUILD READY"
+    print_success "Configuration complete! You can now build ReflexEngine with:"
+    echo
+    echo -e "    ${ACCENT}${BOLD}make $OS${RESET}"
+    echo
+    
+    print_info "For more build options, run:"
+    echo
+    echo -e "    ${ACCENT}${BOLD}make help${RESET}"
+    echo
+  else
+    print_success "Configuration complete. Ready to build for $OS"
+  fi
 }
 
-# Run the main function
-main
+# Run the main function with all arguments
+main "$@"
