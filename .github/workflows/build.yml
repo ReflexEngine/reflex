@@ -35,11 +35,28 @@ jobs:
             # Docker container for arch could be used here
             # For GitHub runner, we'll install similar packages via apt
             sudo apt-get update
-            sudo apt-get install -y build-essential gcc make liblua5.3-dev libuv1-dev
+            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
           elif [ "${{ matrix.distro }}" = "alpine" ]; then
             # Similar approach for alpine
             sudo apt-get update
-            sudo apt-get install -y build-essential gcc make liblua5.3-dev libuv1-dev
+            sudo apt-get install -y build-essential gcc make liblua5.4-dev libuv1-dev
+          fi
+      
+      - name: List installed package locations for ${{ matrix.distro }}
+        run: |
+          echo "Listing locations of installed dependencies for ${{ matrix.distro }}:"
+          if [ "${{ matrix.distro }}" = "debian" ] || [ "${{ matrix.distro }}" = "arch" ] || [ "${{ matrix.distro }}" = "alpine" ]; then
+            echo "gcc location:"
+            which gcc
+            echo "make location:"
+            which make
+            echo "Lua libraries:"
+            find /usr -name "liblua*" | sort
+            echo "libuv libraries:"
+            find /usr -name "libuv*" | sort
+            echo "Include directories:"
+            ls -la /usr/include/lua* || echo "No Lua include directories found"
+            ls -la /usr/include/uv* || echo "No libuv include directories found"
           fi
       
       - name: Run configure script for ${{ matrix.distro }}
@@ -67,6 +84,21 @@ jobs:
         run: |
           brew update
           brew install lua libuv
+      
+      - name: List installed package locations
+        run: |
+          echo "Listing locations of installed dependencies for macOS:"
+          echo "Lua location:"
+          brew --prefix lua
+          echo "libuv location:"
+          brew --prefix libuv
+          echo "Lua libraries:"
+          find $(brew --prefix lua) -name "liblua*" | sort
+          echo "libuv libraries:"
+          find $(brew --prefix libuv) -name "libuv*" | sort
+          echo "Include directories:"
+          ls -la $(brew --prefix lua)/include || echo "No Lua include directory found"
+          ls -la $(brew --prefix libuv)/include || echo "No libuv include directory found"
       
       - name: Run configure script
         run: |
@@ -102,6 +134,24 @@ jobs:
           C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-lua mingw-w64-x86_64-libuv
         shell: cmd
 
+      - name: List installed package locations
+        if: ${{ matrix.build_type == 'mingw' }}
+        run: |
+          echo "Listing locations of installed dependencies for Windows (${{ matrix.build_type }}):"
+          echo "gcc location:"
+          which gcc
+          echo "make location:"
+          which make
+          echo "MSYS2 package locations:"
+          echo "Lua libraries:"
+          find /c/msys64/mingw64 -name "liblua*" | sort
+          echo "libuv libraries:"
+          find /c/msys64/mingw64 -name "libuv*" | sort
+          echo "Include directories:"
+          ls -la /c/msys64/mingw64/include/lua* || echo "No Lua include directories found"
+          ls -la /c/msys64/mingw64/include/uv* || echo "No libuv include directories found"
+        shell: bash
+      
       - name: Run configure script for ${{ matrix.build_type }}
         if: ${{ matrix.build_type == 'mingw' }}
         run: |
