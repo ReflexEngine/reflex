@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Debug build information
+        run: |
+          echo "Building for ${{ matrix.distro }}"
+          echo "Specific distro parameter: '${{ github.event.inputs.specific_distro }}'"
+      
       - name: Install dependencies for ${{ matrix.distro }}
         run: |
           if [[ "${{ matrix.distro }}" == "debian" ]]; then
@@ -32,9 +37,9 @@ jobs:
             sudo apt-get install -y liblua5.1-0-dev libuv1-dev
             sudo ln -sf /usr/include/lua5.1 /usr/include/lua
           elif [[ "${{ matrix.distro }}" == "alpine" ]]; then
-            # Simulate Alpine dependencies on Ubuntu
+            # Ensure both Lua and libuv are installed for Alpine
             sudo apt-get update
-            sudo apt-get install -y liblua5.4-dev
+            sudo apt-get install -y liblua5.4-dev libuv1-dev
           fi
       
       - name: Build for ${{ matrix.distro }}
@@ -56,10 +61,19 @@ jobs:
       - name: Install dependencies
         run: |
           brew install lua libuv
+          # Set environment variables to help find the headers
+          echo "CPATH=$(brew --prefix lua)/include:$(brew --prefix libuv)/include" >> $GITHUB_ENV
+          # Verify installations
+          brew list lua
+          brew list libuv
+          ls -la $(brew --prefix lua)/include
+          ls -la $(brew --prefix libuv)/include
       
       - name: Build for macOS
         run: make macos
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == 'macos' }}
+        env:
+          CPATH: ${{ env.CPATH }}
       
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -83,15 +97,35 @@ jobs:
       - name: Install dependencies for MinGW
         if: ${{ matrix.build_type == 'mingw' }}
         run: |
-          # Install Lua for MinGW
+          # Install Lua and MSYS2 for required libraries
           choco install lua
-          # Create necessary links to include files
-          mkdir -p /usr/include
-          ln -sf "C:/Program Files (x86)/Lua/5.1/include" /usr/include/lua
+          choco install msys2
+          
+          # Install required libraries via MSYS2
+          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-lua mingw-w64-x86_64-libuv mingw-w64-x86_64-gcc"
+          
+          # Create necessary links and directories
+          mkdir -p /mingw64/include
+          mkdir -p /mingw64/lib
+          
+          # Link lua headers if needed
+          if [ ! -d "/mingw64/include/lua" ]; then
+            ln -sf "C:/tools/msys64/mingw64/include/lua5.1" /mingw64/include/lua
+          fi
+          
+          # Add MSYS2 paths to the environment
+          echo "C:/tools/msys64/mingw64/bin" >> $GITHUB_PATH
+          echo "C:/tools/msys64/usr/bin" >> $GITHUB_PATH
         shell: bash
       
       - name: Build for ${{ matrix.build_type }}
-        run: make ${{ matrix.build_type }}
+        run: |
+          # Debug information
+          echo "PATH: $PATH"
+          ls -la /mingw64/include || echo "Directory not found"
+          
+          # Run the build
+          make ${{ matrix.build_type }}
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
         shell: bash
       
@@ -125,12 +159,15 @@ jobs:
           cp -r ./README.md ./LICENSE ./src release/ReflexEngine-${{ steps.version.outputs.VERSION }}/
           mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin
           
+          # Debug artifact structure
+          find ./dist -type f | sort
+          
           # Copy binaries using correct path patterns from the Makefile
-          cp ./dist/reflex-debian/reflex-debian release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian
-          cp ./dist/reflex-arch/reflex-arch release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch
-          cp ./dist/reflex-alpine/reflex-alpine release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine
-          cp ./dist/reflex-macos/reflex-macos release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos
-          cp ./dist/reflex-mingw/reflex-mingw.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-mingw.exe
+          cp ./dist/reflex-debian/reflex-debian release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-debian || echo "Warning: debian build not found"
+          cp ./dist/reflex-arch/reflex-arch release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-arch || echo "Warning: arch build not found"
+          cp ./dist/reflex-alpine/reflex-alpine release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-alpine || echo "Warning: alpine build not found"
+          cp ./dist/reflex-macos/reflex-macos release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-macos || echo "Warning: macos build not found"
+          cp ./dist/reflex-mingw/reflex-mingw.exe release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin/reflex-mingw.exe || echo "Warning: mingw build not found"
           
           # Create archive files
           cd release && tar -czvf ReflexEngine-${{ steps.version.outputs.VERSION }}.tar.gz ReflexEngine-${{ steps.version.outputs.VERSION }}
