@@ -103,6 +103,7 @@ jobs:
       
       - name: Create distribution structure
         run: |
+          mkdir -p release
           mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}
           cp -r ./README.md ./LICENSE ./src release/ReflexEngine-${{ steps.version.outputs.VERSION }}/
           mkdir -p release/ReflexEngine-${{ steps.version.outputs.VERSION }}/bin
