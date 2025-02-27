@@ -35,8 +35,8 @@ DISTRO_debian_TARGET = $(BIN_DIR)/$(TARGET_NAME)-deb
 
 # Arch Linux
 DISTRO_arch_CC = gcc
-DISTRO_arch_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua
-DISTRO_arch_LDFLAGS = $(BASE_LDFLAGS) -L/usr/lib -llua -luv
+DISTRO_arch_CFLAGS = $(BASE_CFLAGS) -I/usr/include -I/usr/include/lua5.4
+DISTRO_arch_LDFLAGS = $(BASE_LDFLAGS) -L/usr/lib -llua5.4 -luv
 DISTRO_arch_TARGET = $(BIN_DIR)/$(TARGET_NAME)-arch
 
 # Alpine Linux
