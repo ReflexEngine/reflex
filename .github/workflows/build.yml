@@ -26,21 +26,10 @@ jobs:
           echo "Building for ${{ matrix.distro }}"
           echo "Specific distro parameter: '${{ github.event.inputs.specific_distro }}'"
       
-      - name: Install dependencies for ${{ matrix.distro }}
+      - name: Run configure script for ${{ matrix.distro }}
         run: |
-          if [[ "${{ matrix.distro }}" == "debian" ]]; then
-            sudo apt-get update
-            sudo apt-get install -y liblua5.4-dev libuv1-dev
-          elif [[ "${{ matrix.distro }}" == "arch" ]]; then
-            # Simulate Arch dependencies on Ubuntu
-            sudo apt-get update
-            sudo apt-get install -y liblua5.1-0-dev libuv1-dev
-            sudo ln -sf /usr/include/lua5.1 /usr/include/lua
-          elif [[ "${{ matrix.distro }}" == "alpine" ]]; then
-            # Ensure both Lua and libuv are installed for Alpine
-            sudo apt-get update
-            sudo apt-get install -y liblua5.4-dev libuv1-dev
-          fi
+          chmod +x ./configure.sh
+          ./configure.sh ${{ matrix.distro }}
       
       - name: Build for ${{ matrix.distro }}
         run: make ${{ matrix.distro }}
@@ -58,22 +47,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install dependencies
+      - name: Run configure script
         run: |
-          brew install lua libuv
-          # Set environment variables to help find the headers
-          echo "CPATH=$(brew --prefix lua)/include:$(brew --prefix libuv)/include" >> $GITHUB_ENV
-          # Verify installations
-          brew list lua
-          brew list libuv
-          ls -la $(brew --prefix lua)/include
-          ls -la $(brew --prefix libuv)/include
+          chmod +x ./configure.sh
+          ./configure.sh macos
       
       - name: Build for macOS
         run: make macos
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == 'macos' }}
-        env:
-          CPATH: ${{ env.CPATH }}
       
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -94,38 +75,15 @@ jobs:
         uses: egor-tensin/setup-mingw@v2
         if: ${{ matrix.build_type == 'mingw' }}
 
-      - name: Install dependencies for MinGW
+      - name: Run configure script for ${{ matrix.build_type }}
         if: ${{ matrix.build_type == 'mingw' }}
         run: |
-          # Install Lua and MSYS2 for required libraries
-          choco install lua
-          choco install msys2
-          
-          # Install required libraries via MSYS2
-          C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-lua mingw-w64-x86_64-libuv mingw-w64-x86_64-gcc"
-          
-          # Create necessary links and directories
-          mkdir -p /mingw64/include
-          mkdir -p /mingw64/lib
-          
-          # Link lua headers if needed
-          if [ ! -d "/mingw64/include/lua" ]; then
-            ln -sf "C:/tools/msys64/mingw64/include/lua5.1" /mingw64/include/lua
-          fi
-          
-          # Add MSYS2 paths to the environment
-          echo "C:/tools/msys64/mingw64/bin" >> $GITHUB_PATH
-          echo "C:/tools/msys64/usr/bin" >> $GITHUB_PATH
+          chmod +x ./configure.sh
+          ./configure.sh ${{ matrix.build_type }}
         shell: bash
       
       - name: Build for ${{ matrix.build_type }}
-        run: |
-          # Debug information
-          echo "PATH: $PATH"
-          ls -la /mingw64/include || echo "Directory not found"
-          
-          # Run the build
-          make ${{ matrix.build_type }}
+        run: make ${{ matrix.build_type }}
         if: ${{ github.event.inputs.specific_distro == '' || github.event.inputs.specific_distro == matrix.build_type }}
         shell: bash
       
