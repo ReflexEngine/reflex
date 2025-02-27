@@ -37,7 +37,7 @@ Before building ReflexEngine, you'll need to install the required dependencies f
 ```bash
 # Install required packages
 sudo apt update
-sudo apt install -y build-essential gcc make liblua5.4-dev libuv1-dev
+sudo apt install -y build-essential gcc make lua5.4 liblua5.4-dev libuv1-dev
 ```
 
 ### 🏹 Arch Linux
