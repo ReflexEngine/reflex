@@ -42,6 +42,24 @@ jobs:
             sudo apt-get install -y build-essential gcc make lua5.4 liblua5.4-dev libuv1-dev
           fi
       
+      - name: List installed package locations for ${{ matrix.distro }}
+        run: |
+          echo "Listing locations of installed dependencies for ${{ matrix.distro }}:"
+          if [ "${{ matrix.distro }}" = "debian" ] || [ "${{ matrix.distro }}" = "arch" ] || [ "${{ matrix.distro }}" = "alpine" ]; then
+            echo "gcc location:"
+            which gcc
+            echo "make location:"
+            which make
+            echo "Lua libraries:"
+            find /usr -name "liblua*" | sort
+            find /usr -name "lua*" | sort
+            echo "libuv libraries:"
+            find /usr -name "libuv*" | sort
+            echo "Include directories:"
+            ls -la /usr/include/lua* || echo "No Lua include directories found"
+            ls -la /usr/include/uv* || echo "No libuv include directories found"
+          fi
+      
       - name: Run configure script for ${{ matrix.distro }}
         run: |
           chmod +x ./configure.sh
@@ -67,6 +85,21 @@ jobs:
         run: |
           brew update
           brew install lua libuv
+      
+      - name: List installed package locations
+        run: |
+          echo "Listing locations of installed dependencies for macOS:"
+          echo "Lua location:"
+          brew --prefix lua
+          echo "libuv location:"
+          brew --prefix libuv
+          echo "Lua libraries:"
+          find $(brew --prefix lua) -name "liblua*" | sort
+          echo "libuv libraries:"
+          find $(brew --prefix libuv) -name "libuv*" | sort
+          echo "Include directories:"
+          ls -la $(brew --prefix lua)/include || echo "No Lua include directory found"
+          ls -la $(brew --prefix libuv)/include || echo "No libuv include directory found"
       
       - name: Run configure script
         run: |
@@ -99,7 +132,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./binout
+          path: ./dist
       
       - name: Create distribution structure
         run: |
